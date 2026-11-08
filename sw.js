@@ -1,0 +1,5 @@
+// Only the public app shell is cached. Auth and private API responses never enter Cache Storage.
+const CACHE='almudawana-shell-v1';
+self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./icon.svg','./manifest.webmanifest']))));
+self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('almudawana-shell-')&&k!==CACHE).map(k=>caches.delete(k))))));
+self.addEventListener('fetch',event=>{const url=new URL(event.request.url);if(event.request.method!=='GET'||url.origin!==self.location.origin||!(event.request.mode==='navigate'||url.pathname.endsWith('.js')||url.pathname.endsWith('.css')||url.pathname.endsWith('/icon.svg')||url.pathname.endsWith('/manifest.webmanifest')))return;event.respondWith(fetch(event.request).then(response=>{if(response.ok){let copy=response.clone();caches.open(CACHE).then(c=>c.put(event.request,copy))}return response}).catch(()=>caches.match(event.request).then(r=>r||(event.request.mode==='navigate'?caches.match('./'):Response.error()))))});
